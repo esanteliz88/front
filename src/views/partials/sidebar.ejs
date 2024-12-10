@@ -1,0 +1,124 @@
+<%
+  const userRoles = user.roles.map(role => role.rol.toLowerCase());
+  const isAdmin = userRoles.includes('admin');
+  const isSolicitante = userRoles.includes('solicitante');
+  const isComprador = userRoles.includes('comprador');
+%>
+
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="menu-inner-shadow"></div>
+  <ul class="menu-inner py-3">
+    <li class="menu-item <%= currentUrl === '/dashboard' ? 'active' : '' %>">
+      <a href="/dashboard" class="menu-link" style="text-decoration: none;">
+        <i class="menu-icon tf-icons ti ti-home"></i>
+        <div>Inicio</div>
+      </a>
+    </li>
+    <% if (isAdmin || isSolicitante || isComprador) { %>
+      <li class="menu-item <%= currentUrl === '/solicitudes' ? 'active' : '' %>">
+        <a href="/solicitudes" class="menu-link" style="text-decoration: none;">
+          <i class="menu-icon tf-icons ti ti-file"></i>
+          <div>Solicitudes</div>
+        </a>
+      </li>
+    <% } %>
+    <% if (isAdmin || isComprador) { %>
+      <li class="menu-item <%= currentUrl === '/ordenes' ? 'active' : '' %>">
+        <a href="/ordenes" class="menu-link" style="text-decoration: none;">
+          <i class="menu-icon tf-icons ti ti-file-invoice"></i>
+          <div>OC</div>
+        </a>
+      </li>
+    <% } %>
+    <% if (isAdmin) { %>
+      <li class="menu-item <%= currentUrl === '/administracion' ? 'active' : '' %>">
+        <a href="/administracion" class="menu-link" style="text-decoration: none;">
+          <i class="menu-icon tf-icons ti ti-settings"></i>
+          <div>Administración</div>
+        </a>
+      </li>
+    <% } %>
+  </ul>
+</aside>
+
+<button id="menu-toggle" class="menu-toggle d-none d-lg-block">
+  <i id="menu-icon" class="ti ti-arrow-bar-right"></i>
+</button>
+
+<style>
+  #layout-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background-color: var(--bs-body-bg, #fff);
+    z-index: 1040;
+    overflow-y: auto;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #layout-menu ul {
+    margin-top: 56px;
+  }
+
+  @media (max-width: 1199px) {
+    #layout-menu {
+      transform: translateX(-100%);
+    }
+
+    #layout-menu.mobile-visible {
+      transform: translateX(0);
+    }
+
+    .menu-toggle {
+      display: block;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    #menu-toggle {
+      display: none !important;
+    }
+
+    #layout-menu {
+      transform: translateX(0);
+    }
+  }
+
+  .menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 18px;
+    z-index: 1100;
+    background-color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #000;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .menu-toggle:hover {
+    background-color: #f8f9fa;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const layoutMenu = document.getElementById("layout-menu");
+    const menuToggle = document.getElementById("menu-toggle");
+    const menuIcon = document.getElementById("menu-icon");
+
+    menuToggle.addEventListener("click", () => {
+      layoutMenu.classList.toggle("mobile-visible");
+      menuIcon.classList.toggle("ti-arrow-bar-right");
+      menuIcon.classList.toggle("ti-arrow-bar-left");
+    });
+  });
+</script>

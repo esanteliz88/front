@@ -1,0 +1,194 @@
+<%- include('../../partials/header', { title: 'Listar Centros de Costo' }) %>
+<%- include('../../partials/navbar') %>
+<%- include('../../partials/sidebar') %>
+<%- include('../../partials/content-wrapper-open') %>
+
+<style>
+  .container-xxl {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 0.75rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .table thead th {
+    text-align: center;
+    vertical-align: middle;
+    background-color: #007bff;
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+  }
+
+  .table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f1f5f9;
+  }
+
+  .table tbody td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px;
+    border: none;
+  }
+
+  .nombre-column, .gerente-column {
+    text-align: left;
+  }
+
+  .estatus-column .badge {
+    font-size: 0.875rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.5rem;
+  }
+
+  .btn-group .btn {
+    margin-right: 5px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-group .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  #tablaCentroCostos_filter input {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 767.98px) {
+    .nombre-column, .gerente-column {
+      max-width: 150px;
+      word-break: break-word;
+    }
+    .table th, .table td {
+      font-size: 0.875rem;
+    }
+  }
+</style>
+
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Listado de Centros de Costo</h4>
+    <a href="/administracion/centrocostos/nuevo" class="btn btn-primary d-flex align-items-center shadow">
+      <i class="fas fa-plus me-1"></i> Nuevo Centro de Costo
+    </a>
+  </div>
+
+  <div class="card shadow">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover w-100" id="tablaCentroCostos">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Código</th>
+              <th class="nombre-column">Nombre</th>
+              <th class="estatus-column">Estatus</th>
+              <th class="gerente-column">Gerente</th>
+              <th>Nivel</th>
+              <th>Monto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% centrosCostos.forEach(cc => { %>
+              <tr>
+                <td><%= cc.id_centro_costo %></td>
+                <td><%= cc.codigo_centro_costo %></td>
+                <td class="nombre-column"><%= cc.nombre %></td>
+                <td class="estatus-column">
+                  <% if (cc.estatus === '1') { %>
+                    <span class="badge bg-success">Activo</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactivo</span>
+                  <% } %>
+                </td>
+                <td class="gerente-column">
+                  <% if (cc.nombre_gerente && cc.apellido_gerente) { %>
+                    <%= cc.nombre_gerente %> <%= cc.apellido_gerente %>
+                  <% } else { %>
+                    ---
+                  <% } %>
+                </td>
+                <td><%= cc.nivel %></td>
+                <td><%= (cc.monto && !isNaN(cc.monto)) ? cc.monto.toFixed(2) : '0' %></td>
+                <td>
+                  <div class="btn-group" role="group">
+                    <a href="/administracion/centrocostos/<%= cc.id_centro_costo %>/editar" 
+                       class="btn btn-sm btn-outline-primary shadow" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <% if (cc.estatus === '1') { %>
+                      <form action="/administracion/centrocostos/<%= cc.id_centro_costo %>/desactivar" 
+                            method="POST" style="display:inline;" 
+                            onsubmit="return confirm('¿Estás seguro de desactivar este centro de costo?');">
+                        <button type="submit" class="btn btn-sm btn-outline-warning shadow" title="Desactivar">
+                          <i class="fas fa-ban"></i>
+                        </button>
+                      </form>
+                    <% } else { %>
+                      <form action="/administracion/centrocostos/<%= cc.id_centro_costo %>/activar" 
+                            method="POST" style="display:inline;" 
+                            onsubmit="return confirm('¿Estás seguro de activar este centro de costo?');">
+                        <button type="submit" class="btn btn-sm btn-outline-success shadow" title="Activar">
+                          <i class="fas fa-check-circle"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('#tablaCentroCostos').DataTable({
+      responsive: true,
+      autoWidth: false,
+      language: {
+        url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json",
+        search: "",
+        emptyTable: "No hay centros de costo disponibles."
+      },
+      pageLength: 10,
+      lengthChange: false,
+      order: [[0, "asc"]],
+      columnDefs: [
+        { targets: 'nombre-column', className: 'nombre-column' },
+        { targets: 'gerente-column', className: 'gerente-column' },
+        { targets: 'estatus-column', className: 'estatus-column', orderable: false },
+        { targets: '_all', responsivePriority: 2 }
+      ],
+      initComplete: function () {
+        var dataTableFilter = $('#tablaCentroCostos_filter');
+        var searchInput = dataTableFilter.find('input').detach();
+        dataTableFilter.empty();
+        var searchContainer = $('<div class="input-group"></div>');
+        var searchIcon = $('<span class="input-group-text"><i class="fas fa-search"></i></span>');
+        searchInput.addClass('form-control').attr('placeholder', 'Buscar centro de costo...');
+        searchContainer.append(searchIcon).append(searchInput);
+        dataTableFilter.append(searchContainer);
+      }
+    });
+  });
+</script>
+
+<%- include('../../partials/footer-text') %>
+<%- include('../../partials/footer') %>
+<%- include('../../partials/content-wrapper-close') %>

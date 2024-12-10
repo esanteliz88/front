@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Orden de Compra</title>
+    <style>
+    @page {
+        size: A4;
+        margin: 2.54cm;
+    }
+
+    body {
+        font-family: 'Arial', sans-serif;
+        font-size: 11px;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        background-color: white;
+    }
+
+    .container {
+        width: 100%;
+        padding: 0.5cm;
+        box-sizing: border-box;
+    }
+
+    .watermark {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg) scale(1.5);
+        font-size: 80px;
+        color: rgba(0, 0, 0, 0.25);
+        text-align: center;
+        z-index: 9999;
+        pointer-events: none;
+        user-select: none;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .header, .section {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 4px;
+        padding: 4px;
+        page-break-inside: avoid;
+    }
+
+    .header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .header .info, .header .details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header .info p, .header .details p {
+        margin: 2px 0;
+    }
+
+    .header .details {
+        text-align: right;
+    }
+
+    .header .title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #444;
+        margin: 8px 0;
+        text-align: center;
+        text-transform: uppercase;
+        text-decoration: underline;
+        grid-column: 1 / -1;
+    }
+
+    .info-table, .items-table, .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0px;
+        page-break-inside: avoid;
+    }
+
+    .items-table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+
+    .items-table col.col-codigo {
+        width: 10%;
+        white-space: nowrap;
+    }
+
+    .items-table col.col-producto {
+        width: 50%;
+    }
+
+    .items-table col.col-cantidad {
+        width: 10%;
+        white-space: nowrap;
+    }
+
+    .items-table col.col-precio {
+        width: 15%;
+        white-space: nowrap;
+    }
+
+    .items-table col.col-valor {
+        width: 15%;
+        white-space: nowrap;
+    }
+
+    .items-table th,
+    .items-table td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: left;
+        vertical-align: middle;
+        word-break: break-word;
+    }
+
+    .items-table th {
+        background-color: #f2f2f2;
+        white-space: nowrap;
+    }
+
+    .items-table td.currency,
+    .items-table td.value {
+        text-align: right;
+    }
+
+    .summary-table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+
+    .summary-table col.summary-col-label {
+        width: 60%;
+    }
+
+    .summary-table col.summary-col-currency,
+    .summary-table col.summary-col-value {
+        width: 20%;
+    }
+
+    .summary-table td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: right;
+        vertical-align: middle;
+        word-break: break-word;
+        white-space: nowrap;
+    }
+
+    .summary-table td:first-child {
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .info-table td.right-align {
+        text-align: right;
+    }
+
+    @media print {
+        .watermark {
+            opacity: 0.25;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="watermark">BORRADOR</div>
+        <div class="header">
+            <div class="info">
+                <p><strong>EMPRESA:</strong> <%= defaultText(empresa.nombre) %></p>
+                <p><strong>RUT:</strong> <%= defaultText(empresa.documento) %></p>
+                <p><strong>DIRECCIÓN:</strong> <%= defaultText(empresa.direccion) %></p>
+            </div>
+            <div class="details">
+                <p><strong>CENTRO DE COSTO:</strong> <%= defaultText(centrocosto.nombre) %></p>
+                <p><strong>FECHA:</strong> <%= defaultText(fechaHoy) %></p>
+                <p></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <table class="info-table">
+                <tr>
+                    <td colspan="2"><strong>SEÑOR (ES):</strong> <%= defaultText(proveedor.nombre_proveedor) %></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>RUT:</strong> <%= defaultText(proveedor.documento_proveedor) %></td>
+                </tr>
+                <tr>
+                    <td><strong>BANCO:</strong> <%= defaultText(banco.nombre_banco) %></td>
+                    <td class="right-align"><strong>TIPO CUENTA:</strong> <%= defaultText(banco.tipo_cuenta) %></td>
+                </tr>
+                <tr>
+                    <td><strong>N°:</strong> <%= defaultText(banco.numero_cuenta) %></td>
+                    <td class="right-align"><strong>CORREO:</strong> <%= defaultText(proveedor.correo_principal) %></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <p><strong>DIRECCIÓN DE DESPACHO:</strong> <%= defaultText(empresa.direccion) %></p>
+            <p><strong>FORMA DE PAGO:</strong> <%= defaultText(plazopago.nombre) %></p>
+            <p><strong>CONTACTO:</strong> <%= defaultText(creadoroc) %></p>
+        </div>
+
+        <div class="section">
+            <p><strong>OBSERVACIÓN:</strong> <%= defaultText(nota) %></p>
+        </div>
+
+        <div class="section">
+            <table class="items-table">
+                <colgroup>
+                    <col class="col-codigo">
+                    <col class="col-producto">
+                    <col class="col-cantidad">
+                    <col class="col-precio">
+                    <col class="col-valor">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Cantidad /<br>Unidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% productos.forEach(producto => { %>
+                    <tr>
+                        <td><%= producto.id_producto %></td>
+                        <td><%= defaultText(producto.descripcion) %></td>
+                        <td><%= producto.cantidad %> / <%= defaultText(producto.unidad) %></td>
+                        <td class="currency"><%= defaultText(moneda.abrev) %> <%= formatNumber(producto.valorUnitario, moneda.abrev) %></td>
+                        <td class="value"><%= defaultText(moneda.abrev) %> <%= formatNumber(producto.valorTotal, moneda.abrev) %></td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <table class="summary-table">
+                <colgroup>
+                    <col class="summary-col-label">
+                    <col class="summary-col-currency">
+                    <col class="summary-col-value">
+                </colgroup>
+                <tbody>
+                    <% if (totales.subtotal) { %>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><%= moneda.abrev %></td>
+                        <td><%= formatNumber(totales.subtotal, moneda.abrev) %></td>
+                    </tr>
+                    <% } %>
+                    <% if (totales.impuesto) { %>
+                    <tr>
+                        <td>Impuesto</td>
+                        <td><%= moneda.abrev %></td>
+                        <td><%= formatNumber(totales.impuesto, moneda.abrev) %></td>
+                    </tr>
+                    <% } %>
+                    <% if (totales.retencion) { %>
+                    <tr>
+                        <td>Retención</td>
+                        <td><%= moneda.abrev %></td>
+                        <td><%= formatNumber(totales.retencion, moneda.abrev) %></td>
+                    </tr>
+                    <% } %>
+                    <% if (totales.propina) { %>
+                    <tr>
+                        <td>Propina</td>
+                        <td><%= moneda.abrev %></td>
+                        <td><%= formatNumber(totales.propina, moneda.abrev) %></td>
+                    </tr>
+                    <% } %>
+                    <% if (totales.total) { %>
+                    <tr>
+                        <td>Total</td>
+                        <td><%= moneda.abrev %></td>
+                        <td><%= formatNumber(totales.total, moneda.abrev) %></td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

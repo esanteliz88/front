@@ -1,0 +1,394 @@
+<%- include('../partials/header', { title: 'Detalle de Orden de Compra' }) %>
+<%- include('../partials/navbar', { navbarText: 'Detalle de Orden de Compra: "' + orden.codigo + '"' }) %>
+<%- include('../partials/sidebar') %>
+<%- include('../partials/content-wrapper-open') %>
+
+<%
+  const userRoles = user.roles.map(role => role.rol.toLowerCase());
+  const isAdmin = userRoles.includes('admin');
+  const isComprador = userRoles.includes('comprador');
+  const isSolicitante = userRoles.includes('solicitante');
+  const regresarRuta = isSolicitante ? '/solicitudes' : '/ordenes';
+%>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  .detail-container {
+    padding: 2rem;
+    background-color: #ffffff; /* Cambiado a blanco para mejor contraste */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidad */
+    margin-bottom: 2rem;
+  }
+
+  .approval-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2rem auto;
+    width: 100%;
+  }
+
+  .approval-flow h4 {
+    margin-bottom: 1.5rem;
+    color: #212529;
+    text-align: center;
+  }
+
+  .flow-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    overflow: visible;
+    padding-top: 0;
+  }
+
+  .step-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  .step-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin: 0;
+  }
+
+  .level-label,
+  .chat-icon {
+    width: 50px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #212529;
+    margin: 0.25rem 0;
+    flex: none;
+  }
+
+  .step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    margin-bottom: 0.5rem;
+    z-index: 1;
+    position: relative;
+  }
+
+  .step-circle.pendiente {
+    background-color: #ffc107;
+  }
+
+  .step-circle.aprobado {
+    background-color: #28a745;
+  }
+
+  .step-circle.rechazado {
+    background-color: #dc3545;
+  }
+
+  .separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+    width: 80px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+
+  .connector-line-horizontal {
+    position: absolute;
+    top: 0;
+    width: 100px;
+    height: 2px;
+    background-color: #ccc;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .flow-container {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-wrapper {
+      flex-direction: column;
+    }
+
+    .separator {
+      width: 2px;
+      height: 60px;
+      margin: 2rem 0 -2rem;
+    }
+
+    .connector-line-horizontal {
+      top: -30px;
+      left: 0;
+      width: 2px;
+      height: 100%;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+  }
+
+  .approver-name {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #212529;
+    max-width: 150px;
+    word-wrap: break-word;
+    margin-bottom: 0.5rem;
+  }
+
+  .chat-icon {
+    text-align: center;
+    font-size: 1rem;
+    color: #212529;
+    position: relative;
+    margin-bottom: 0.5rem;
+    width: 50px;
+  }
+
+  .chat-icon.no-comment {
+    color: #ccc;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    max-width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: normal;
+    z-index: 1;
+  }
+
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .chat-icon:hover .tooltip,
+  .chat-icon:focus .tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .approval-level {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .approval-level h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #212529;
+  }
+
+  .approval-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 20px;
+    color: #fff;
+    background-color: #6c757d; /* Default: bg-secondary */
+    transition: background-color 0.3s ease;
+  }
+
+  .approval-badge.pendiente {
+    background-color: #ffc107; /* Amarillo */
+  }
+
+  .approval-badge.aprobado {
+    background-color: #28a745; /* Verde */
+  }
+
+  .approval-badge.rechazado {
+    background-color: #dc3545; /* Rojo */
+  }
+
+  .approval-badge.pagada {
+    background-color: #007bff; /* Azul */
+  }
+
+  .approval-badge.cerrada {
+    background-color: #6c757d; /* Gris */
+  }
+
+  .pdf-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    width: 100%;
+  }
+
+  .pdf-preview {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .pdf-preview {
+      height: 400px;
+    }
+
+    .approver-name {
+      max-width: 120px;
+    }
+  }
+
+  .action-buttons {
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .action-buttons a {
+    margin: 0 0.5rem;
+  }
+</style>
+
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="app-orden-detalle detail-container">
+
+      <% if (historialAprobaciones.length > 0) { %>
+        <div class="approval-flow">
+          <h4>Flujo de Historial de Aprobación</h4>
+          <div class="flow-container">
+            <% historialAprobaciones.forEach((historial, index) => { %>
+              <div class="step-wrapper">
+                <div class="step-container">
+                  <div class="level-label">Nivel <%= historial.nivel_aprobacion %></div>
+                  <div class="step-circle <%= historial.approvals === 1 ? 'aprobado' : historial.approvals === 2 ? 'rechazado' : 'pendiente' %>" aria-label="Nivel de aprobación <%= historial.nivel_aprobacion %>: <%= historial.approvals === 1 ? 'Aprobado' : historial.approvals === 2 ? 'Rechazado' : 'Pendiente' %>">
+                    <% if (historial.approvals === 1) { %>
+                      <i class="fas fa-check"></i>
+                    <% } else if (historial.approvals === 2) { %>
+                      <i class="fas fa-times"></i>
+                    <% } else { %>
+                      <i class="fas fa-clock"></i>
+                    <% } %>
+                  </div>
+                  <span class="approver-name"><%= usuarios[historial.aprobador_id] ? usuarios[historial.aprobador_id].nombre + ' ' + usuarios[historial.aprobador_id].apellido : 'Desconocido' %></span>
+                  <div class="chat-icon <%= !historial.comentario ? 'no-comment' : '' %>">
+                    <% if (historial.comentario) { %>
+                      <i class="fas fa-comment" tabindex="0" aria-label="Comentarios sobre esta aprobación"></i>
+                      <div class="tooltip"><%= historial.comentario %></div>
+                    <% } else { %>
+                      <i class="fas fa-comment-slash" tabindex="0" aria-label="Sin comentarios"></i>
+                    <% } %>
+                  </div>
+                </div>
+                <% if (index < historialAprobaciones.length -1) { %>
+                  <div class="separator">
+                    <div class="connector-line-horizontal"></div>
+                  </div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="approval-level">
+        <h4>Estatus de la Orden</h4>
+        <%
+          let estatusClass = 'pendiente';
+          let estatusIcon = 'fas fa-exclamation-circle';
+          switch (orden.estatus.toLowerCase()) {
+            case 'pendiente':
+              estatusClass = 'pendiente';
+              estatusIcon = 'fas fa-exclamation-circle';
+              break;
+            case 'aprobada':
+              estatusClass = 'aprobado';
+              estatusIcon = 'fas fa-check-circle';
+              break;
+            case 'rechazada':
+              estatusClass = 'rechazado';
+              estatusIcon = 'fas fa-times-circle';
+              break;
+            case 'pagada':
+              estatusClass = 'pagada';
+              estatusIcon = 'fas fa-money-check-alt';
+              break;
+            case 'cerrada':
+              estatusClass = 'cerrada';
+              estatusIcon = 'fas fa-lock';
+              break;
+            default:
+              estatusClass = 'pendiente';
+              estatusIcon = 'fas fa-exclamation-circle';
+          }
+        %>
+        <span class="approval-badge <%= estatusClass %>">
+          <i class="<%= estatusIcon %> me-2"></i> <%= orden.estatus.charAt(0).toUpperCase() + orden.estatus.slice(1) %>
+        </span>
+      </div>
+
+      <div class="pdf-preview-container">
+        <% if (orden.ruta_archivo_pdf) { %>
+          <iframe
+            src="<%= orden.ruta_archivo_pdf.replace(/\"/g, '') %>" 
+            class="pdf-preview"
+            frameborder="0"
+            scrolling="auto"
+            aria-label="Vista previa del PDF de la orden de compra"
+          ></iframe>
+        <% } else { %>
+          <p>No hay archivo PDF disponible para esta orden.</p>
+        <% } %>
+      </div>
+
+      <div class="action-buttons">
+        <a href="<%= regresarRuta %>" class="btn btn-secondary">
+          <i class="fas fa-arrow-left me-2"></i> Regresar
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer-text') %>
+<%- include('../partials/footer') %>
+<%- include('../partials/content-wrapper-close') %>

@@ -1,0 +1,166 @@
+<%- include('../partials/header', { title: 'Archivos Adjuntos' }) %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/sidebar') %>
+<%- include('../partials/content-wrapper-open') %>
+
+<style>
+  .file-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .file-list-item {
+    border-bottom: 1px solid #ddd;
+    padding: 15px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+  }
+  .file-info i {
+    font-size: 1.5rem;
+  }
+  .file-name {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    font-size: 1rem;
+    padding: 8px 12px;
+  }
+
+  .modal-custom {
+    max-width: 85%;
+    margin: 1.75rem auto;
+  }
+  .modal-custom .modal-dialog {
+    margin-left: 250px;
+  }
+  .modal-custom .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-custom .btn-close {
+    font-size: 1.5rem;
+    color: #000;
+    opacity: 1;
+    background-color: #dc3545;
+  }
+
+  @media (max-width: 768px) {
+    .modal-custom .modal-dialog {
+      margin-left: 0;
+      max-width: 95%;
+    }
+    iframe {
+      height: 600px;
+    }
+  }
+</style>
+
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="app-solicitud-archivos">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+          <a href="/solicitudes/<%= solicitud.id_solicitud %>" class="text-decoration-none text-primary">
+            Archivos adjuntos de la Solicitud #<%= solicitud.nro_solicitud %>
+          </a>
+        </h4>
+        <div>
+          <a href="/solicitudes" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i> Regresar
+          </a>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <% if (archivos && archivos.length > 0) { %>
+            <ul class="file-list">
+              <% archivos.forEach((archivo, index) => { %>
+                <li class="file-list-item">
+                  <div class="file-info">
+                    <i class="<%= archivo.iconClass %>"></i>
+                    <span class="file-name"><%= archivo.originalFileName %></span>
+                  </div>
+                  <div class="file-actions">
+                    <% if (archivo.isPreviewable) { %>
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#filePreviewModal"
+                        onclick="loadPreviewContent(<%= index %>)"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    <% } %>
+                    <a href="/solicitudes/<%= solicitud.id_solicitud %>/descargar/<%= encodeURIComponent(archivo.blobName) %>" class="btn btn-outline-primary btn-sm">
+                      <i class="fas fa-download"></i>
+                    </a>
+                  </div>
+                </li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted text-center">No hay archivos adjuntos.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-custom">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filePreviewModalLabel">Vista Previa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="modalBodyContent">
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer-text') %>
+<%- include('../partials/footer') %>
+<%- include('../partials/content-wrapper-close') %>
+
+<script>
+  const archivos = <%- JSON.stringify(archivos) %>;
+
+  function loadPreviewContent(index) {
+    const archivo = archivos[index];
+    const modalBody = document.getElementById('modalBodyContent');
+    const modalTitle = document.getElementById('filePreviewModalLabel');
+    modalTitle.textContent = archivo.originalFileName;
+    modalBody.innerHTML = '';
+
+    let content = '';
+    if (archivo.extension === 'pdf') {
+      content = `<iframe src="${archivo.sasUrl}" type="application/pdf" style="width:100%;height:80vh;"></iframe>`;
+    } else if (['jpg', 'jpeg', 'png'].includes(archivo.extension)) {
+      content = `<img src="${archivo.sasUrl}" alt="${archivo.originalFileName}" class="img-fluid mt-2">`;
+    } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(archivo.extension)) {
+      content = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(archivo.sasUrl)}" style="width:100%;height:80vh;"></iframe>`;
+    } else {
+      content = `<p class="text-center">No se puede previsualizar este archivo.</p>`;
+    }
+
+    modalBody.innerHTML = content;
+  }
+</script>
